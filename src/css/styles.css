@@ -270,9 +270,6 @@ img {
     opacity: 0;
 }
 
-.header__burger.is-active span:nth-child(3) {
-    /* Если бы было 3 линии, но у нас 2 в HTML, поправим */
-}
 
 /* Исправляем селекторы для 2 линий */
 .header__burger span:nth-child(1) {
@@ -369,7 +366,7 @@ img {
 }
 
 .hero__title {
-    font-size: 2.8rem;
+    font-size: 2.2rem;
     margin-bottom: 24px;
     line-height: 1.1;
 }
@@ -979,4 +976,15 @@ img {
 .cookie-popup a {
     color: var(--accent-secondary);
     text-decoration: underline;
+}
+/* Добавить в конец style.css */
+.card,
+.blog-card,
+.innovation__list li,
+.contact__item {
+    opacity: 1;
+    /* По умолчанию видны */
+    transform: none;
+    will-change: transform, opacity;
+    /* Оптимизация для браузера */
 }
