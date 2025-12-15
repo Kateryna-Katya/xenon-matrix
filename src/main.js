@@ -1,16 +1,20 @@
 document.addEventListener("DOMContentLoaded", () => {
     
     // ==========================================
-    // 1. НАСТРОЙКА БИБЛИОТЕК
+    // 1. НАСТРОЙКА БИБЛИОТЕК (Безопасный старт)
     // ==========================================
     
     // Иконки
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
-    // GSAP + ScrollTrigger
-    if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
-        gsap.registerPlugin(ScrollTrigger);
+    // GSAP Check
+    if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
+        console.error("GSAP Critical Error: Libraries not loaded.");
+        // Если GSAP не загрузился, делаем элементы видимыми, чтобы сайт не был пустым
+        document.querySelectorAll('.card, .blog-card, .hero__title, .hero__desc').forEach(el => el.style.opacity = 1);
+        return;
     }
+    gsap.registerPlugin(ScrollTrigger);
 
     // Lenis (Плавный скролл)
     if (typeof Lenis !== 'undefined') {
@@ -20,16 +24,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
                 smooth: true,
             });
-            function raf(time) {
-                lenis.raf(time);
-                requestAnimationFrame(raf);
-            }
+            function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
             requestAnimationFrame(raf);
-            // Связка с GSAP
             lenis.on('scroll', ScrollTrigger.update);
             gsap.ticker.add((time) => lenis.raf(time * 1000));
             gsap.ticker.lagSmoothing(0);
-        } catch (e) { console.warn('Lenis error:', e); }
+        } catch (e) { console.warn('Lenis init error:', e); }
     }
 
     // ==========================================
@@ -56,150 +56,125 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ==========================================
-    // 3. АНИМАЦИИ (ПО СЕКЦИЯМ)
+    // 3. АНИМАЦИИ (НОВЫЙ ПОДХОД С BATCH)
     // ==========================================
     
-    // --- A. HERO SECTION ---
-    const heroTl = gsap.timeline();
-    // Используем простые селекторы с проверкой
-    if(document.querySelector('.hero__title')) 
-        heroTl.from('.hero__title', { y: 60, opacity: 0, duration: 1, ease: "power3.out" });
-    if(document.querySelector('.hero__desc')) 
-        heroTl.from('.hero__desc', { y: 30, opacity: 0, duration: 0.8 }, "-=0.6");
-    if(document.querySelector('.hero__btns')) 
-        heroTl.from('.hero__btns', { y: 20, opacity: 0, duration: 0.8 }, "-=0.6");
-    if(document.querySelector('.cube-wrapper')) 
-        heroTl.from('.cube-wrapper', { scale: 0, opacity: 0, rotation: 180, duration: 1.5 }, "-=1");
+    // Функция для безопасного выбора элементов
+    const q = (selector) => document.querySelector(selector);
+    const qa = (selector) => document.querySelectorAll(selector);
 
+    // --- A. HERO SECTION (Одиночные элементы) ---
+    const heroTl = gsap.timeline({ defaults: { ease: "power3.out" } });
+    if(q('.hero__title')) heroTl.from('.hero__title', { y: 60, opacity: 0, duration: 1, delay: 0.2 });
+    if(q('.hero__desc'))  heroTl.from('.hero__desc', { y: 30, opacity: 0, duration: 0.8 }, "-=0.6");
+    if(q('.hero__btns'))  heroTl.from('.hero__btns', { y: 20, opacity: 0, duration: 0.8 }, "-=0.6");
+    if(q('.cube-wrapper')) heroTl.from('.cube-wrapper', { scale: 0, opacity: 0, rotation: 180, duration: 1.5, ease: "elastic.out(1,0.5)" }, "-=1");
 
-    // --- B. EXPERTISE (Исправление бага "только первый элемент") ---
-    // Мы находим ВСЕ карточки внутри секции expertise
-    const expertiseCards = document.querySelectorAll('.expertise .card');
-    
-    if (expertiseCards.length > 0) {
-        gsap.from(expertiseCards, {
+    // --- B. ЗАГОЛОВКИ СЕКЦИЙ ---
+    qa('.section__header').forEach(header => {
+        gsap.from(header.children, {
             scrollTrigger: {
-                trigger: '.expertise', // Анимация начнется, когда доскроллим до секции
-                start: "top 75%",      // Когда верх секции будет на 75% экрана
+                trigger: header,
+                start: "top 85%",
+                toggleActions: "play none none none"
             },
-            y: 50,           // Сдвиг снизу
-            opacity: 0,      // Появление из прозрачности
+            y: 30,
+            opacity: 0,
             duration: 0.8,
-            stagger: 0.2,    // Задержка 0.2 сек между карточками (ВАЖНО)
-            ease: "power2.out"
+            stagger: 0.2
         });
-    }
+    });
+
+    // --- C. СПИСКИ КАРТОЧЕК (ИСПРАВЛЕНИЕ: BATCH) ---
+    // Этот метод гарантированно анимирует все элементы, даже если их много или они сложены вертикально.
     
-    // Заголовок экспертизы
-    const expTitle = document.querySelector('.expertise .section__header');
-    if (expTitle) {
-        gsap.from(expTitle, {
-            scrollTrigger: { trigger: '.expertise', start: "top 80%" },
-            y: 30, opacity: 0, duration: 0.8
-        });
-    }
+    // 1. Экспертиза и Блог (Карточки)
+    ScrollTrigger.batch(".expertise .card, .blog-card", {
+        start: "top 85%", // Начинаем, когда верх элемента на 85% высоты экрана
+        onEnter: batch => gsap.from(batch, {
+            opacity: 0,
+            y: 50,
+            duration: 0.8,
+            stagger: 0.15, // Задержка между элементами в одной "пачке"
+            ease: "power2.out",
+            overwrite: true
+        }),
+        once: true // Анимировать только один раз
+    });
 
+    // 2. Инновации (Список галочек)
+    ScrollTrigger.batch(".innovation__list li", {
+        start: "top 90%",
+        onEnter: batch => gsap.from(batch, {
+            opacity: 0,
+            x: -20,
+            duration: 0.6,
+            stagger: 0.1,
+            ease: "power2.out",
+            overwrite: true
+        }),
+        once: true
+    });
 
-    // --- C. INNOVATION ---
-    // Список галочек
-    const innovList = document.querySelectorAll('.innovation__list li');
-    if (innovList.length > 0) {
-        gsap.from(innovList, {
-            scrollTrigger: { trigger: '.innovation', start: "top 75%" },
-            x: -30, opacity: 0, duration: 0.6, stagger: 0.15
-        });
-    }
-    // Картинка справа
-    const innovImg = document.querySelector('.innovation__image');
-    if (innovImg) {
-        gsap.from(innovImg, {
+    // 3. Контакты (Иконки)
+    ScrollTrigger.batch(".contact__item", {
+        start: "top 90%",
+        onEnter: batch => gsap.from(batch, {
+            opacity: 0,
+            y: 20,
+            duration: 0.6,
+            stagger: 0.1,
+            overwrite: true
+        }),
+        once: true
+    });
+
+    // Одиночные элементы в секциях
+    if(q('.innovation__image')) {
+        gsap.from('.innovation__image', {
             scrollTrigger: { trigger: '.innovation', start: "top 75%" },
             scale: 0.9, opacity: 0, duration: 1
         });
     }
-
-
-    // --- D. BLOG ---
-    const blogCards = document.querySelectorAll('.blog-card');
-    if (blogCards.length > 0) {
-        gsap.from(blogCards, {
-            scrollTrigger: { trigger: '.blog', start: "top 70%" },
-            y: 60, opacity: 0, duration: 0.8, stagger: 0.2
-        });
-    }
-
-
-    // --- E. CONTACTS ---
-    const contactItems = document.querySelectorAll('.contact__item');
-    if (contactItems.length > 0) {
-        gsap.from(contactItems, {
-            scrollTrigger: { trigger: '.contact', start: "top 80%" },
-            y: 20, opacity: 0, duration: 0.6, stagger: 0.1
-        });
-    }
-    const contactForm = document.querySelector('.form');
-    if (contactForm) {
-        gsap.from(contactForm, {
-            scrollTrigger: { trigger: '.contact', start: "top 80%" },
+    if(q('.form')) {
+        gsap.from('.form', {
+            scrollTrigger: { trigger: '.contact', start: "top 75%" },
             x: 50, opacity: 0, duration: 0.8
         });
     }
 
     // ==========================================
-    // 4. ФОРМА (Валидация + Капча)
+    // 4. ФОРМА И КУКИ (Без изменений)
     // ==========================================
     const form = document.getElementById('contactForm');
-    
     if (form) {
-        // Капча
-        const num1 = Math.floor(Math.random() * 5) + 1; // Простые числа 1-5
+        const num1 = Math.floor(Math.random() * 5) + 1;
         const num2 = Math.floor(Math.random() * 5) + 1;
         const result = num1 + num2;
-        const captchaLabel = document.getElementById('captchaTask');
-        if(captchaLabel) captchaLabel.textContent = `${num1} + ${num2}`;
+        if(q('#captchaTask')) q('#captchaTask').textContent = `${num1} + ${num2}`;
 
-        // Валидация телефона
-        const phoneInput = document.getElementById('phone');
-        if (phoneInput) {
-            phoneInput.addEventListener('input', (e) => {
-                e.target.value = e.target.value.replace(/\D/g, ''); // Только цифры
-            });
-        }
+        if(q('#phone')) q('#phone').addEventListener('input', (e) => e.target.value = e.target.value.replace(/\D/g, ''));
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            
-            // Проверка капчи
-            const captchaInput = document.getElementById('captcha');
-            if (parseInt(captchaInput.value) !== result) {
-                alert('Ошибка в примере! Попробуйте еще раз.');
-                captchaInput.value = '';
-                return;
+            if (parseInt(q('#captcha').value) !== result) {
+                alert('Неверное решение! Попробуйте еще раз.'); return;
             }
-
-            // Успешная отправка
             const btn = form.querySelector('button');
-            const originalText = btn.textContent;
             btn.textContent = 'Отправлено!';
-            btn.style.backgroundColor = '#D9F99D'; // Lime color
-            btn.style.color = '#111';
-            
+            btn.style.background = '#D9F99D'; btn.style.color = '#111';
             setTimeout(() => {
                 form.style.display = 'none';
-                document.getElementById('formSuccess').style.display = 'block';
+                q('#formSuccess').style.display = 'block';
                 form.reset();
             }, 1000);
         });
     }
 
-    // ==========================================
-    // 5. COOKIE
-    // ==========================================
     const cookiePopup = document.getElementById('cookiePopup');
     if (cookiePopup && !localStorage.getItem('cookieAccepted')) {
         setTimeout(() => cookiePopup.classList.add('is-visible'), 2500);
-        
-        document.getElementById('acceptCookie').addEventListener('click', () => {
+        q('#acceptCookie').addEventListener('click', () => {
             localStorage.setItem('cookieAccepted', 'true');
             cookiePopup.classList.remove('is-visible');
         });
