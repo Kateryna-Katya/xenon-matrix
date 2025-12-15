@@ -988,3 +988,160 @@ img {
     will-change: transform, opacity;
     /* Оптимизация для браузера */
 }
+/* =========================================
+   13. STYLES FOR LEGAL PAGES (Стилизация страниц)
+   ========================================= */
+
+/* Контейнер страницы */
+.pages {
+  padding: 140px 0 100px; /* Отступ сверху под фиксированный хедер */
+  background-color: var(--bg-color);
+  min-height: 100vh;
+}
+
+.pages .container {
+  max-width: 860px; /* Оптимальная ширина для чтения */
+  background: #fff;
+  padding: 60px;
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-hard); /* Жесткая тень */
+}
+
+/* Адаптив для мобильных */
+@media (max-width: 768px) {
+  .pages .container {
+      padding: 30px 20px;
+      border-radius: 8px;
+  }
+}
+
+/* --- ТИПОГРАФИКА --- */
+
+/* Главный заголовок H1 */
+.pages h1 {
+  font-family: var(--font-heading);
+  font-size: 2.8rem;
+  line-height: 1.1;
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 3px solid var(--accent-secondary); /* Лаймовая линия */
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+}
+
+@media (max-width: 768px) {
+  .pages h1 {
+      font-size: 2rem;
+  }
+}
+
+/* Подзаголовки H2 */
+.pages h2 {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  margin-top: 48px;
+  margin-bottom: 20px;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Декоративный квадрат перед H2 */
+.pages h2::before {
+  content: '';
+  display: block;
+  width: 12px;
+  height: 12px;
+  background: var(--accent-primary); /* Синий квадрат */
+  border: 1px solid var(--text-main);
+  box-shadow: 2px 2px 0 var(--text-main);
+}
+
+/* Подзаголовки H3 */
+.pages h3 {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  margin-top: 32px;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+/* Основной текст */
+.pages p {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  line-height: 1.75; /* Увеличенный интервал для легкости чтения */
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+/* Жирный текст */
+.pages strong {
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+/* --- СПИСКИ --- */
+
+.pages ul, .pages ol {
+  margin-bottom: 28px;
+  padding-left: 20px;
+}
+
+.pages li {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  position: relative;
+}
+
+/* Маркированный список (ul) */
+.pages ul li {
+  list-style: none;
+  padding-left: 24px;
+}
+
+.pages ul li::before {
+  content: '→'; /* Стрелочка вместо точки */
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--accent-primary);
+  font-weight: 800;
+  font-family: var(--font-heading);
+}
+
+/* Нумерованный список (ol) */
+.pages ol li {
+  list-style-type: decimal;
+  margin-left: 20px;
+  padding-left: 8px;
+}
+
+.pages ol li::marker {
+  font-weight: 700;
+  color: var(--text-main);
+  font-family: var(--font-heading);
+}
+
+/* --- ССЫЛКИ В ТЕКСТЕ --- */
+.pages a {
+  color: var(--text-main);
+  text-decoration: none;
+  border-bottom: 2px solid var(--accent-primary); /* Синее подчеркивание */
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.pages a:hover {
+  background-color: var(--accent-secondary); /* Лаймовый фон при наведении */
+  box-shadow: 2px 2px 0 var(--text-main);
+  border-bottom: 2px solid transparent;
+  padding: 0 4px;
+  border-radius: 4px;
+  color: var(--text-main);
+}
